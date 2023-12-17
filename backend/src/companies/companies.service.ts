@@ -26,7 +26,7 @@ export class CompaniesService {
     this.companies.push(company);
     return company;
   }
-  deleteCompanyById(id: string): Company {
-    return this.companies.find((company) => company.id === id);
+  deleteCompanyById(id: string): void {
+    this.companies = this.companies.filter((company) => company.id !== id);
   }
 }
