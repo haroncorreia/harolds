@@ -1,0 +1,2 @@
+npm i class-validator --save
+npm i class-transformer --save

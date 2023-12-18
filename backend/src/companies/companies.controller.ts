@@ -1,15 +1,35 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { CompaniesService } from './companies.service';
-import { Company } from './company.model';
+import { Company, CompanyActive } from './company.model';
 import { CreateCompanyDto } from './dto/create-company-dto';
+import { GetCompaniesFilterDto } from './dto/get-companies-filter-dto';
+import { CompanyStatusValidationPipe } from './pipes/company-status-validation.pipe';
 
 @Controller('companies')
 export class CompaniesController {
   constructor(private companiesService: CompaniesService) {}
 
   @Get()
-  getAllCompanies(): Company[] {
-    return this.companiesService.getAllCompanies();
+  getCompanies(
+    @Query(ValidationPipe) filterDto: GetCompaniesFilterDto,
+  ): Company[] {
+    // console.log(filterDto);
+    if (Object.keys(filterDto).length) {
+      return this.companiesService.filterCompanies(filterDto);
+    } else {
+      return this.companiesService.getAllCompanies();
+    }
   }
 
   @Get('/:id')
@@ -18,6 +38,7 @@ export class CompaniesController {
   }
 
   @Post()
+  @UsePipes(ValidationPipe)
   createCompany(@Body() createCompanyDto: CreateCompanyDto): Company {
     // console.log(name);
     // console.log(registryNumber);
@@ -25,8 +46,16 @@ export class CompaniesController {
   }
 
   @Delete('/:id')
-  deleteCompanyById(@Param('id') id: string): void {
-    this.companiesService.deleteCompanyById(id);
+  deleteCompany(@Param('id') id: string): void {
+    this.companiesService.deleteCompany(id);
+  }
+
+  @Patch('/:id/status')
+  updateCompany(
+    @Param('id') id: string,
+    @Body('status', CompanyStatusValidationPipe) status: CompanyActive,
+  ): Company {
+    return this.companiesService.updateCompanyStatus(id, status);
   }
 
   /**
