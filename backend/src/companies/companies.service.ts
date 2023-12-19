@@ -1,52 +1,67 @@
 /* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Company } from './company.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { GetCompaniesFilterDto } from './dto/get-companies-filter-dto';
-// import { CompanyRepository } from './company.repository';
+import { CompanyRepository } from './company.repository';
+import { CreateCompanyDto } from './dto/create-company-dto';
+import { CompanyStatus } from './company-status.enum';
 
 @Injectable()
 export class CompaniesService {
   
   constructor(
-    @InjectRepository(Company)
-    private companyRepository: Repository<Company>,
-    // private readonly companyRepository: CompanyRepository,
+    private readonly companyRepository: CompanyRepository,
   ) {}
 
-  findAll(): Promise<Company[]> {
-    return this.companyRepository.find();
+  async createCompany(createCompanyDto: CreateCompanyDto): Promise<Company> {
+    // Using repository
+    return this.companyRepository.createCompany(createCompanyDto);
   }
 
-  async findOne(id: number): Promise<Company> {
+  async getCompanies(filterDto: GetCompaniesFilterDto): Promise<Company[]> {
+    return await this.companyRepository.getCompanies(filterDto);
+  }
+
+  async getCompanyById(id: number): Promise<Company> {
     const r = await this.companyRepository.findOneBy({ id });
-    if (!r) throw new NotFoundException(`Company with registry ${id} not found.`);
+    // console.log(r);
+    if (!r) throw new NotFoundException(`Company with ID ${id} not found.`);
     return r;
   }
 
-  async remove(id: number): Promise<void> {
-    await this.companyRepository.delete(id);
+  async deleteCompany(id: number): Promise<void> {
+    const r = await this.companyRepository.delete(id);
+    // console.log(r);
+    if ( r.affected === 0 ) throw new NotFoundException(`Company with ID ${id} not found.`);
   }
 
-  async filter(filter: GetCompaniesFilterDto): Promise<Company[]> {
+  // async filter(filter: GetCompaniesFilterDto): Promise<Company[]> {
     
-    const { status, search } = filter;
+  //   const { status, search } = filter;
 
-    let companies = await this.findAll();
+  //   // console.log(filter);
 
-    if (status)
-      companies = companies.filter((company) => company.active === status);
+  //   let companies = await this.getCompanies();
 
-    if (search) {
-      companies = companies.filter(
-        (company) =>
-          company.name.includes(search) ||
-          company.registryNumber.includes(search),
-      );
-    }
+  //   if (status)
+  //     companies = companies.filter((company) => company.active === status);
 
-    return companies;
+  //   if (search) {
+  //     companies = companies.filter(
+  //       (company) =>
+  //         company.name.includes(search) ||
+  //         company.registryNumber.includes(search),
+  //     );
+  //   }
+
+  //   return companies;
+  // }
+
+  async updateCompanyStatus(id: number, status: CompanyStatus): Promise<Company> {
+    const r = await this.getCompanyById(id);
+    r.active = status;
+    await r.save();
+    return r;
   }  
 
 }
