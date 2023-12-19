@@ -4,13 +4,13 @@ import {
   // ArgumentMetadata, 
   PipeTransform 
 } from '@nestjs/common';
-import { CompanyActive } from '../company.model';
+import { CompanyStatus } from '../company-status.enum';
 
 export class CompanyStatusValidationPipe implements PipeTransform {
 
   readonly allowedStatuses = [
-    CompanyActive.ACTIVE,
-    CompanyActive.DEACTIVE,
+    CompanyStatus.ACTIVE,
+    CompanyStatus.DEACTIVE,
   ]
 
   private isValid(status: any) {

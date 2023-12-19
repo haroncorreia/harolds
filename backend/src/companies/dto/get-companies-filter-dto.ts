@@ -1,12 +1,15 @@
 /* eslint-disable prettier/prettier */
 import { IsIn, IsNotEmpty, IsOptional } from "class-validator";
-import { CompanyActive } from "../company.model";
+import { CompanyStatus } from "../company-status.enum";
 
 export class GetCompaniesFilterDto {
+  
   @IsOptional()
-  @IsIn([CompanyActive.ACTIVE, CompanyActive.DEACTIVE])
-  status: CompanyActive;
+  @IsIn([CompanyStatus.ACTIVE, CompanyStatus.DEACTIVE])
+  status: CompanyStatus;
+
   @IsOptional()
   @IsNotEmpty()
   search: string;
+  
 }

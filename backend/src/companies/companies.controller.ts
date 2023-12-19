@@ -1,83 +1,31 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import { Controller, Get, Param, ParseIntPipe, Query, ValidationPipe } from '@nestjs/common';
 import { CompaniesService } from './companies.service';
-import { Company, CompanyActive } from './company.model';
-import { CreateCompanyDto } from './dto/create-company-dto';
+
+import { Company } from './company.entity';
 import { GetCompaniesFilterDto } from './dto/get-companies-filter-dto';
-import { CompanyStatusValidationPipe } from './pipes/company-status-validation.pipe';
 
 @Controller('companies')
 export class CompaniesController {
-  constructor(private companiesService: CompaniesService) {}
+  
+  constructor(
+    private companiesService: CompaniesService
+  ) {}
 
   @Get()
-  getCompanies(
+  getAll(
     @Query(ValidationPipe) filterDto: GetCompaniesFilterDto,
-  ): Company[] {
-    // console.log(filterDto);
+  ): Promise<Company[]> {
     if (Object.keys(filterDto).length) {
-      return this.companiesService.filterCompanies(filterDto);
+      return this.companiesService.filter(filterDto);
     } else {
-      return this.companiesService.getAllCompanies();
+      return this.companiesService.findAll();
     }
   }
 
   @Get('/:id')
-  getCompanyById(@Param('id') id: string): Company {
-    return this.companiesService.getCompanyById(id);
+  getById(@Param('id', ParseIntPipe) id: number): Promise<Company> {
+    return this.companiesService.findOne(id);
   }
 
-  @Post()
-  @UsePipes(ValidationPipe)
-  createCompany(@Body() createCompanyDto: CreateCompanyDto): Company {
-    // console.log(name);
-    // console.log(registryNumber);
-    return this.companiesService.createCompany(createCompanyDto);
-  }
-
-  @Delete('/:id')
-  deleteCompany(@Param('id') id: string): void {
-    this.companiesService.deleteCompany(id);
-  }
-
-  @Patch('/:id/status')
-  updateCompany(
-    @Param('id') id: string,
-    @Body('status', CompanyStatusValidationPipe) status: CompanyActive,
-  ): Company {
-    return this.companiesService.updateCompanyStatus(id, status);
-  }
-
-  /**
-   * 
-   * Controller recebendo o atributo individualizado
-   * 
-  createCompany(
-    @Body('name') name: string,
-    @Body('registryNumber') registryNumber: string,
-  ): Company {
-    // console.log(name);
-    // console.log(registryNumber);
-    return this.companiesService.createCompany(name, registryNumber);
-  }
-   */
-
-  /**
-   * 
-   * Controller recebendo todo o body
-   * 
-  createCompany(@Body body) {
-    console.log(body);
-  }
-   */
 }

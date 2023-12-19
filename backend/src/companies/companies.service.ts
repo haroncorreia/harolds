@@ -1,21 +1,39 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Company, CompanyActive } from './company.model';
-import { v4 as uuidv4 } from 'uuid';
-import { CreateCompanyDto } from './dto/create-company-dto';
+import { Company } from './company.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { GetCompaniesFilterDto } from './dto/get-companies-filter-dto';
+// import { CompanyRepository } from './company.repository';
 
 @Injectable()
 export class CompaniesService {
-  private companies: Company[] = [];
+  
+  constructor(
+    @InjectRepository(Company)
+    private companyRepository: Repository<Company>,
+    // private readonly companyRepository: CompanyRepository,
+  ) {}
 
-  getAllCompanies(): Company[] {
-    return this.companies;
+  findAll(): Promise<Company[]> {
+    return this.companyRepository.find();
   }
 
-  filterCompanies(filter: GetCompaniesFilterDto): Company[] {
+  async findOne(id: number): Promise<Company> {
+    const r = await this.companyRepository.findOneBy({ id });
+    if (!r) throw new NotFoundException(`Company with registry ${id} not found.`);
+    return r;
+  }
+
+  async remove(id: number): Promise<void> {
+    await this.companyRepository.delete(id);
+  }
+
+  async filter(filter: GetCompaniesFilterDto): Promise<Company[]> {
+    
     const { status, search } = filter;
 
-    let companies = this.getAllCompanies();
+    let companies = await this.findAll();
 
     if (status)
       companies = companies.filter((company) => company.active === status);
@@ -29,32 +47,6 @@ export class CompaniesService {
     }
 
     return companies;
-  }
+  }  
 
-  getCompanyById(id: string): Company {
-    const r = this.companies.find((company) => company.id === id);
-    if (!r) throw new NotFoundException(`Company with ID ${id} not found.`);
-    return r;
-  }
-
-  createCompany(createCompanyDto: CreateCompanyDto): Company {
-    const { name, registryNumber } = createCompanyDto;
-    const company: Company = {
-      id: uuidv4(),
-      name,
-      registryNumber,
-      active: CompanyActive.DEACTIVE,
-    };
-    this.companies.push(company);
-    return company;
-  }
-  deleteCompany(id: string): void {
-    const r = this.getCompanyById(id);
-    this.companies = this.companies.filter((company) => company.id !== r.id);
-  }
-  updateCompanyStatus(id: string, status: CompanyActive): Company {
-    const company = this.getCompanyById(id);
-    company.active = status;
-    return company;
-  }
 }

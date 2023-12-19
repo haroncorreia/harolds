@@ -1,2 +1,5 @@
-npm i class-validator --save
-npm i class-transformer --save
+npm i --save class-validator
+npm i --save class-transformer
+npm i --save @nestjs/typeorm
+npm i --save typeorm
+npm i --save pg
