@@ -1,9 +1,8 @@
 /* eslint-disable prettier/prettier */
-// import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { User } from './user.entity';
-import { AuthCredencialsDto } from './dto/auth-credencials-dto';
+import { AuthSignUpDto } from './dto/auth-signup-dto';
 // import { CreateUserDto } from './dto/create-user-dto';
 // import { UserStatus } from './User-status.enum';
 // import { GetCompaniesFilterDto } from './dto/get-companies-filter-dto';
@@ -15,18 +14,27 @@ export class UserRepository extends Repository<User> {
     super(User, dataSource.createEntityManager())
   }
 
-  async singUp(authCredencialsDto: AuthCredencialsDto) {
+  async singUp(authSignUpDto: AuthSignUpDto): Promise<void> {
 
-    const { username, password } = authCredencialsDto;
+    const { name, username, password } = authSignUpDto;
     
     const e = new User();
     
+    e.name = name;
     e.username = username;
     e.password = password;
+    e.active = false;
     
-    await this.save(e);
-    
-    return e;    
+    try {
+      await this.save(e);
+    } catch (error) {
+      if (error.code === '23505') {
+        // console.log(error.code);
+        throw new ConflictException('Username given already exists.');
+      } else {
+        throw new InternalServerErrorException();
+      }
+    }
     
   }
   // /**
