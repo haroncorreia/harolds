@@ -11,3 +11,6 @@ npm i --save pg
 nest g module auth
 nest g controller auth --no-spec
 nest g service auth --no-spec
+
+npm i --save bcrypt
+npm i @nestjs/jwt @nestjs/passport passport passport-jwt

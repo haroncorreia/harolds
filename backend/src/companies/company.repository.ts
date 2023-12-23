@@ -1,11 +1,12 @@
 /* eslint-disable prettier/prettier */
 // import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Company } from './company.entity';
 import { CreateCompanyDto } from './dto/create-company-dto';
 import { CompanyStatus } from './company-status.enum';
 import { GetCompaniesFilterDto } from './dto/get-companies-filter-dto';
+import { User } from 'src/auth/user.entity';
 
 @Injectable()
 export class CompanyRepository extends Repository<Company> {
@@ -19,27 +20,46 @@ export class CompanyRepository extends Repository<Company> {
    * @param createCompanyDto 
    * @returns 
    */
-  async createCompany(createCompanyDto: CreateCompanyDto): Promise<Company> {
+  async createCompany(
+    createCompanyDto: CreateCompanyDto,
+    loggedUser: User
+    ): Promise<Company> {
     
     // Create using Entity
     const { name, registryNumber } = createCompanyDto;
     
-    const company = new Company();
+    const e = new Company();
     
-    company.name = name;
-    company.registryNumber = registryNumber;
-    company.active = CompanyStatus.DEACTIVE;
+    e.name = name;
+    e.registryNumber = registryNumber;
+    e.active = CompanyStatus.DEACTIVE;
+    e.user = loggedUser
     
-    await this.save(company);
+    try {
+      await this.save(e);
+    } catch (error) {
+      if (error.code === '23505') {
+        // console.log(error.code);
+        throw new ConflictException('Registry number given already exists.');
+      } else {
+        throw new InternalServerErrorException();
+      }
+    }
     
-    return company;
+    // Deleting user to return only company entity back do frontend
+    delete e.user;
+    return e;
 
   }
   
 
-  async getCompanies(filterDto: GetCompaniesFilterDto): Promise<Company[]> {
+  async getCompanies(
+    filterDto: GetCompaniesFilterDto,
+    loggedUser: User
+    ): Promise<Company[]> {
     const { status, search } = filterDto;
     const q = this.createQueryBuilder('company')
+    q.where('company.userId = :userId', { userId: loggedUser.id })
     if (status)
       q.andWhere('company.active = :status', { status })
     if (search)

@@ -1,8 +1,10 @@
 /* eslint-disable prettier/prettier */
-import { DataSource, Repository } from 'typeorm';
-import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
-import { User } from './user.entity';
+import * as bcrypt from 'bcrypt'
 import { AuthSignUpDto } from './dto/auth-signup-dto';
+import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
+import { User } from './user.entity';
+import { AuthSignInDto } from './dto/auth-signin-dto';
 // import { CreateUserDto } from './dto/create-user-dto';
 // import { UserStatus } from './User-status.enum';
 // import { GetCompaniesFilterDto } from './dto/get-companies-filter-dto';
@@ -22,8 +24,10 @@ export class UserRepository extends Repository<User> {
     
     e.name = name;
     e.username = username;
-    e.password = password;
+    e.salt = await bcrypt.genSalt();
+    e.password = await this.hashPassword(password, e.salt);
     e.active = false;
+    // console.log(e.password);
     
     try {
       await this.save(e);
@@ -37,6 +41,25 @@ export class UserRepository extends Repository<User> {
     }
     
   }
+
+  async validateUserPassword(authSignInDto: AuthSignInDto): Promise<string> {
+    
+    const { username, password } = authSignInDto;
+
+    const user = await this.findOne({ where: [{username}] });
+
+    if ( user && await user.validatePassword(password) ) {
+      return user.username;
+    } else {
+      return null;
+    }
+
+  }
+
+  private async hashPassword(password: string, salt:string): Promise<string> {
+    return bcrypt.hash(password, salt);
+  }
+
   // /**
   //  * Create User
   //  * @param createUserDto 
