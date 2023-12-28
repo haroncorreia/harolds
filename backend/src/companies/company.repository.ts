@@ -33,7 +33,7 @@ export class CompanyRepository extends Repository<Company> {
     e.name = name;
     e.registryNumber = registryNumber;
     e.active = CompanyStatus.DEACTIVE;
-    e.user = loggedUser
+    // e.user = loggedUser
     
     try {
       await this.save(e);
@@ -47,7 +47,7 @@ export class CompanyRepository extends Repository<Company> {
     }
     
     // Deleting user to return only company entity back do frontend
-    delete e.user;
+    // delete e.user;
     return e;
 
   }

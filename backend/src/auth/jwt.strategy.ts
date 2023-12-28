@@ -26,6 +26,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // The strategy itselfs...
     const { username } = payload;
     const user = await this.userRepository.findOne({ where: [{username}] });
+    // Remove sensitive data
+    delete user.password;
+    delete user.salt;
     if (!user) {
       throw new UnauthorizedException();
     }
