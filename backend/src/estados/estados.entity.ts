@@ -11,7 +11,7 @@ import {
 
 @Entity()
 @Unique(['estado', 'uf'])
-export class Estados extends BaseEntity {
+export class Estados {
   @PrimaryGeneratedColumn()
   id: number;
 

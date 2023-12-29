@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { Estados } from './estados.entity';
 import { GetEstadosFilterDto } from './dto/get-estados-filter-dto';
@@ -42,6 +43,11 @@ export class EstadosRepository extends Repository<Estados> {
     return e;
   }
 
+  /**
+   * Get all
+   * @param filterDto
+   * @returns
+   */
   async getAllObjects(filterDto: GetEstadosFilterDto): Promise<Estados[]> {
     const { searchWord } = filterDto;
     const q = this.createQueryBuilder('estados');
@@ -51,6 +57,35 @@ export class EstadosRepository extends Repository<Estados> {
       });
     const r = await q.getMany();
     return r;
+  }
+
+  /**
+   * Update
+   * @param dto
+   * @returns
+   */
+  async updateObject(
+    id: number,
+    dto: CreateEstadoDto,
+    loggedUser: User,
+  ): Promise<Estados> {
+    const { estado, uf } = dto;
+    const e = await this.findOne({ where: { id } });
+    if (!e) throw new NotFoundException('ID not found.');
+    e.estado = estado;
+    e.uf = uf;
+    e.modificado_por = loggedUser.username;
+    try {
+      await this.save(e);
+    } catch (error) {
+      console.log(error);
+      if (error.code === '23505') {
+        throw new ConflictException('ID or Unique field given already exists.');
+      } else {
+        throw new InternalServerErrorException();
+      }
+    }
+    return e;
   }
 
   async customWhere(

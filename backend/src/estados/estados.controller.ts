@@ -2,7 +2,10 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  ParseIntPipe,
   Post,
+  Put,
   Query,
   UseGuards,
   UsePipes,
@@ -26,6 +29,11 @@ export class EstadosController {
     return this.service.getAll(filterDto);
   }
 
+  @Get('/:id')
+  getById(@Param('id', ParseIntPipe) id: number): Promise<Estados> {
+    return this.service.getById(id);
+  }
+
   @Post()
   @UsePipes(ValidationPipe)
   create(
@@ -33,5 +41,15 @@ export class EstadosController {
     @GetUser() loggedUser: User,
   ): Promise<Estados> {
     return this.service.create(dto, loggedUser);
+  }
+
+  @Put('/:id')
+  @UsePipes(ValidationPipe)
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateEstadoDto,
+    @GetUser() loggedUser: User,
+  ): Promise<Estados> {
+    return this.service.update(id, dto, loggedUser);
   }
 }
