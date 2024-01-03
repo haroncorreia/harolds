@@ -25,9 +25,14 @@ export class EstadosController {
   constructor(private service: EstadosService) {}
 
   @Get()
-  getAll(@Query(ValidationPipe) filterDto: GetEstadosFilterDto) {
-    return this.service.getAll(filterDto);
+  list() {
+    return this.service.list();
   }
+
+  @Get('/filter')
+  filter(@Query(ValidationPipe) filterDto: GetEstadosFilterDto) {
+    return this.service.filter(filterDto);
+  }  
 
   @Get('/:id')
   getById(@Param('id', ParseIntPipe) id: number): Promise<Estados> {
@@ -40,7 +45,7 @@ export class EstadosController {
     @Body() dto: CreateEstadoDto,
     @GetUser() loggedUser: User,
   ): Promise<Estados> {
-    return this.service.create(dto, loggedUser);
+    return this.service.save(dto, loggedUser);
   }
 
   @Put('/:id')
@@ -50,6 +55,6 @@ export class EstadosController {
     @Body() dto: CreateEstadoDto,
     @GetUser() loggedUser: User,
   ): Promise<Estados> {
-    return this.service.update(id, dto, loggedUser);
+    return this.service.save(dto, loggedUser, id);
   }
 }

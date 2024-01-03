@@ -1,47 +1,39 @@
 import {
-  BaseEntity,
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
   PrimaryGeneratedColumn,
-  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
-@Unique(['estado', 'uf'])
 export class Estados {
+  
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
   estado: string;
 
-  @Column()
+  @Column({ unique: true })
   uf: string;
 
-  @CreateDateColumn()
-  criado_em: Date;
+  @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
+  created_at: Date;
 
-  @Column({
-    nullable: true,
-  })
-  criado_por: string;
+  @Column({ nullable: false })
+  created_by: string;
 
-  @UpdateDateColumn()
-  modificado_em: Date;
+  @UpdateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)", onUpdate: "CURRENT_TIMESTAMP(6)" })
+  updated_at: Date;
 
-  @Column({
-    nullable: true,
-  })
-  modificado_por: string;
+  @Column({ nullable: false })
+  updated_by: string;
 
-  @DeleteDateColumn()
-  deletado_em: Date;
+  @DeleteDateColumn({ nullable: true })
+  deleted_at: Date;
 
-  @Column({
-    nullable: true,
-  })
-  deletado_por: string;
+  @Column({ nullable: true })
+  deleted_by: string;
 }

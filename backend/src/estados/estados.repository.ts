@@ -1,9 +1,7 @@
 import { DataSource, Repository } from 'typeorm';
 import {
-  ConflictException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common';
 import { Estados } from './estados.entity';
 import { GetEstadosFilterDto } from './dto/get-estados-filter-dto';
@@ -17,75 +15,64 @@ export class EstadosRepository extends Repository<Estados> {
   }
 
   /**
-   * Create
+   * Save object
    * @param dto
    * @returns
    */
-  async createObject(dto: CreateEstadoDto, loggedUser: User): Promise<Estados> {
-    // Create using Entity
+  async saveObject(dto: CreateEstadoDto, loggedUser: User, id?: number): Promise<Estados> {
+    
+    let e;
     const { estado, uf } = dto;
-    const e = new Estados();
+
+    if (id) {
+      e = await this.findOne({ where: { id } });
+    } else {
+      e = new Estados();
+    }
+
     e.estado = estado;
     e.uf = uf;
-    console.log(loggedUser);
-    e.criado_por = loggedUser.username;
-    e.modificado_por = loggedUser.username;
+    e.created_by = loggedUser.username;
+    e.updated_by = loggedUser.username;
+
     try {
       await this.save(e);
     } catch (error) {
-      // console.log(error);
-      if (error.code === '23505') {
-        throw new ConflictException('ID or Unique given already exists.');
-      } else {
-        throw new InternalServerErrorException();
-      }
+      throw new InternalServerErrorException(error.detail);
     }
+    
     return e;
+
   }
 
   /**
-   * Get all
+   * List all objects
    * @param filterDto
    * @returns
    */
-  async getAllObjects(filterDto: GetEstadosFilterDto): Promise<Estados[]> {
-    const { searchWord } = filterDto;
+  async listObjects(): Promise<Estados[]> {
     const q = this.createQueryBuilder('estados');
-    if (searchWord)
-      q.andWhere('(estados.estado LIKE :param OR estados.uf LIKE :param)', {
-        param: `%${searchWord}%`,
-      });
     const r = await q.getMany();
     return r;
   }
 
   /**
-   * Update
-   * @param dto
+   * List all objects
+   * @param filterDto
    * @returns
    */
-  async updateObject(
-    id: number,
-    dto: CreateEstadoDto,
-    loggedUser: User,
-  ): Promise<Estados> {
-    const { estado, uf } = dto;
-    const e = await this.findOne({ where: { id } });
-    if (!e) throw new NotFoundException('ID not found.');
-    e.estado = estado;
-    e.uf = uf;
-    e.modificado_por = loggedUser.username;
-    try {
-      await this.save(e);
-    } catch (error) {
-      console.log(error);
-      if (error.code === '23505') {
-        throw new ConflictException('ID or Unique field given already exists.');
-      } else {
-        throw new InternalServerErrorException();
-      }
+  async filterObjects(filterDto: GetEstadosFilterDto): Promise<Estados[]> {
+    const { campo, valor } = filterDto;
+    const q = this.createQueryBuilder('estados');
+    if (campo) {
+      if (valor)
+        q.andWhere('(estados.:campo LIKE :valor)', { campo: `${campo}`, valor: `%${valor}%`});
+    } else {
+      if (valor)
+        q.andWhere('(estados.estado LIKE :valor OR estados.uf LIKE :valor)', { valor: `%${valor}%`});
     }
-    return e;
+    const r = await q.getMany();
+    return r;
   }
 
   async customWhere(
