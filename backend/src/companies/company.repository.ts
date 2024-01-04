@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 // import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';

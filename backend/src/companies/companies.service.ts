@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Company } from './company.entity';
 import { GetCompaniesFilterDto } from './dto/get-companies-filter-dto';

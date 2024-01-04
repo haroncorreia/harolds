@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   Query,
@@ -28,7 +30,7 @@ export class EstadosController {
    * List
    * @returns 
    */
-  @Get()
+  @Get('/')
   list(): Promise<Estados[]> {
     return this.service.list();
   }
@@ -88,4 +90,34 @@ export class EstadosController {
   ): Promise<Estados> {
     return this.service.save(dto, loggedUser, id);
   }
+  
+  /**
+   * Delete
+   * @param id 
+   * @param loggedUser 
+   * @returns 
+   */
+  @Delete('/:id')
+  delete(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser() loggedUser: User,
+    ): Promise<void> {
+    return this.service.delete(id, loggedUser);
+  }
+
+  /**
+   * Restore
+   * @param id 
+   * @param dto 
+   * @param loggedUser 
+   * @returns 
+   */
+  @Patch('/:id')
+  restore(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser() loggedUser: User,
+  ): Promise<Estados> {
+    return this.service.restore(id, loggedUser);
+  }
+
 }
