@@ -35,6 +35,16 @@ export class EstadosController {
     return this.service.list();
   }
 
+
+  /**
+   * List
+   * @returns 
+   */
+  @Get('/deleted')
+  listDeleted(): Promise<Estados[]> {
+    return this.service.listDeleted();
+  }
+
   /**
    * Filter
    * @param filterDto 

@@ -61,6 +61,19 @@ export class EstadosRepository extends Repository<Estados> {
    * @param filterDto
    * @returns
    */
+  async listDeletedObjects(): Promise<Estados[]> {
+    const q = this.createQueryBuilder('estados').withDeleted();
+    q.where(`deleted_at IS NOT NULL`);
+    // console.log(q.getSql())
+    const r = await q.getMany();
+    return r;
+  }
+
+  /**
+   * List all objects
+   * @param filterDto
+   * @returns
+   */
   async filterObjects(
     filterDto: GetEstadosFilterDto
     ): Promise<Estados[]> {
@@ -86,23 +99,15 @@ export class EstadosRepository extends Repository<Estados> {
    * @returns
    */
   async deleteObject(loggedUser: User, id: number): Promise<void> {
-    
     const e = await this.findOne({ where: { id } });
-    
     e.deleted_by = loggedUser.username;
-    
+    // Promise transaction
     await this.manager.transaction( async (t) => {
-    
       await t.save(Estados, e);
       await t.softDelete(Estados, e.id);
-    
     }).catch((e) => {
-    
-      console.log(e);
-      throw new InternalServerErrorException('Não foi possível realizar a operação.');
-    
+      throw new InternalServerErrorException(`Não foi possível realizar a operação (${e.code}).`);
     });    
-    
   }  
 
   /**
@@ -111,32 +116,23 @@ export class EstadosRepository extends Repository<Estados> {
    * @returns
    */
   async restoreObject(loggedUser: User, id: number): Promise<Estados> {
-    
     const e = await this.findOne({ where: { id }, withDeleted: true });
-    
     e.updated_by = loggedUser.username;
     e.deleted_by = null;
-
+    // Async transaction
     const queryRunner = this.dataSource.createQueryRunner()
     await queryRunner.startTransaction()
-
     try {
-        // execute some operations on this transaction:
         await queryRunner.manager.save(Estados, e);
-        await queryRunner.manager.restore(Estados, e.uf);
-        // commit transaction now:
+        await queryRunner.manager.restore(Estados, e.id);
         await queryRunner.commitTransaction()
     } catch (e) {
-        // since we have errors let's rollback changes we made
         await queryRunner.rollbackTransaction()
         throw new InternalServerErrorException(`Não foi possível realizar a operação (${e.code}).`);
     } finally {
-        // you need to release query runner which is manually created:
         await queryRunner.release()
     }    
-
     return await this.findOne({ where: { id } });
-    
   }
 
   async customWhere(column: string, value: string | number, operator = '='): Promise<Estados> {

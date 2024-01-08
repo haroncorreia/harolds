@@ -20,6 +20,14 @@ export class EstadosService {
   }
 
   /**
+   * List all deleted objects
+   * @returns 
+   */
+  async listDeleted(): Promise<Estados[]> {
+    return await this.repository.listDeletedObjects();
+  }  
+
+  /**
    * Filter objects by params on DTO
    * @param filterDto
    * @returns 
